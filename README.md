@@ -1,6 +1,6 @@
 # Parser Combinator in Kotlin
 
-A very simple parser combinator library implementation in Kotlin.
+A very simple [parser combinator](https://www.cs.nott.ac.uk/~pszgmh/pearl.pdf) library implementation in Kotlin.
 
 ## Example
 

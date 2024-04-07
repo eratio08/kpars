@@ -1,31 +1,41 @@
+import org.hamcrest.CoreMatchers
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
 
 typealias ParserResult<A> = List<Pair<A, String>>
 
-class IsParserResult<A>(private val expected: A, private val rest: String? = null) :
+class IsParserResult<A>(private val expected: List<Pair<A, String?>>) :
     TypeSafeMatcher<ParserResult<A>>() {
     override fun matchesSafely(item: ParserResult<A>?): Boolean =
-        item?.firstOrNull()?.let { (a, r) ->
-            if (rest != null) a == expected && rest == r
-            else a == expected
+        item?.let {
+            if (item.size != expected.size) {
+                false
+            } else {
+                expected.zip(item).fold(true) { acc, (expected, item) ->
+                    if (expected.second == null) {
+                        expected.first == item.first
+                    } else {
+                        expected.first == item.first && expected.second == item.second
+                    }
+                }
+            }
         } == true
 
     override fun describeTo(description: Description) {
-        if (rest != null) {
-            description.appendText("to parse ")
-                .appendValue(expected)
-                .appendText(" (")
-                .appendValue(expected!!::class.qualifiedName)
-                .appendText(") and remaining ")
-                .appendValue(rest)
-        } else {
-            description.appendText("to parse ")
-                .appendValue(expected)
-                .appendText(" (")
-                .appendValue(expected!!::class.qualifiedName)
-                .appendText(")")
+        expected.forEach { (expected, rest) ->
+            if (rest != null) {
+                description.appendValue(expected)
+                    .appendText(" (")
+                    .appendValue(expected!!::class.qualifiedName)
+                    .appendText(") with remaining ")
+                    .appendValue(rest)
+            } else {
+                description.appendValue(expected)
+                    .appendText(" (")
+                    .appendValue(expected!!::class.qualifiedName)
+                    .appendText(")")
+            }
         }
     }
 
@@ -35,20 +45,28 @@ class IsParserResult<A>(private val expected: A, private val rest: String? = nul
         } else if (item.isEmpty()) {
             description.appendText("parsed nothing as the parser did not match")
         } else {
-            description.appendText("parsed ")
+            description.appendText("Got ")
             item.forEach { (a, rest) ->
                 description.appendValue(a)
                     .appendText(" (")
                     .appendValue(a!!::class.qualifiedName)
                     .appendText(") with remaining ")
                     .appendValue(rest)
+                    .appendText(" ")
             }
+            description.appendText(".")
         }
     }
 }
 
 fun <A> isParsedAs(expected: A, rest: String? = null): Matcher<ParserResult<A>> =
-    IsParserResult(expected, rest)
+    IsParserResult(listOf(expected to rest))
+
+fun <A> areParsedAs(expected: Pair<A, String?>, vararg expectedResults: Pair<A, String?>): Matcher<ParserResult<A>> =
+    CoreMatchers.allOf(IsParserResult(buildList {
+        add(expected.first to expected.second)
+        addAll(expectedResults)
+    }))
 
 class IsNotMatched : TypeSafeMatcher<ParserResult<*>>() {
     override fun matchesSafely(item: ParserResult<*>?): Boolean =
@@ -66,7 +84,7 @@ class IsNotMatched : TypeSafeMatcher<ParserResult<*>>() {
         if (item == null) {
             super.describeMismatchSafely(item, description)
         } else {
-            description.appendText("parsed ")
+            description.appendText("got ")
             item.forEach { (a, rest) ->
                 description.appendValue(a)
                     .appendText(" (")
@@ -74,6 +92,7 @@ class IsNotMatched : TypeSafeMatcher<ParserResult<*>>() {
                     .appendText(") with remaining ")
                     .appendValue(rest)
             }
+            description.appendText(".")
         }
     }
 }

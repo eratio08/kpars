@@ -170,11 +170,6 @@ fun <A> chainR1(p: Parser<A>, op: Parser<(A, A) -> A>): Parser<A> {
  */
 fun <A> chainR(p: Parser<A>, op: Parser<(A, A) -> A>, a: A): Parser<A> = chainR1(p, op) or return_(a)
 
-fun isWhitespace(c: Char): Boolean = when (c) {
-    ' ', '\n', '\r', '\n', '\t' -> true
-    else -> false
-}
-
 /**
  * Parses the input as long `p` is satisfied. Matches 1 or more.
  */
@@ -184,6 +179,11 @@ fun takeWhile1 (p: (Char)-> Boolean): Parser<String> = many1 (satisfies (p)) map
  * Parses the input as long `p` is satisfied. Matches 0 or more.
  */
 fun takeWhile (p: (Char)-> Boolean): Parser<String> = many (satisfies (p)) map {chars -> chars.joinToString()}
+
+fun isWhitespace(c: Char): Boolean = when (c) {
+    ' ', '\n', '\r', '\n', '\t' -> true
+    else -> false
+}
 
 /**
  * Matches whitespaces.

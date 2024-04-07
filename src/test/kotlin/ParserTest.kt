@@ -3,6 +3,10 @@ import de.elurz.both
 import de.elurz.char_
 import de.elurz.flatMap
 import de.elurz.item
+import de.elurz.keepLeft
+import de.elurz.keepRight
+import de.elurz.many
+import de.elurz.many1
 import de.elurz.map
 import de.elurz.or
 import de.elurz.return_
@@ -298,6 +302,138 @@ class ParserTest {
 
             //when
             val result = string_("ac")(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class Many {
+        @Test
+        fun `should parse a single match of the given parser`() {
+            //given
+            val input = "abc"
+
+            //when
+            val result = many(char_('a'))(input)
+
+            //then
+            assertThat(result, isParsedAs('a', "bc"))
+        }
+
+        @Test
+        fun `should parse multiple matches of the given parser`() {
+            //given
+            val input = "abcabcd"
+
+            //when
+            val result = many(string_("abc"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("abc", "abc"), "d"))
+        }
+
+        @Test
+        fun `should succeed parser if does not match`() {
+            //given
+            val input = "abcabcd"
+
+            //when
+            val result = many(string_("ac"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf(), input))
+        }
+    }
+
+    @Nested
+    inner class Many1 {
+        @Test
+        fun `should parse a single match of the given parser`() {
+            //given
+            val input = "abc"
+
+            //when
+            val result = many1(char_('a'))(input)
+
+            //then
+            assertThat(result, isParsedAs('a', "bc"))
+        }
+
+        @Test
+        fun `should parse multiple matches of the given parser`() {
+            //given
+            val input = "abcabcd"
+
+            //when
+            val result = many1(string_("abc"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("abc", "abc"), "d"))
+        }
+
+        @Test
+        fun `should fail if parser does not match at least once`() {
+            //given
+            val input = "abcabcd"
+
+            //when
+            val result = many1(string_("ac"))(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class KeepLeft {
+        @Test
+        fun `should keep the result of the left parser`() {
+            //given
+            val input = "abc"
+
+            //when
+            val result = (char_('a') keepLeft char_('b'))(input)
+
+            //then
+            assertThat(result, isParsedAs('a', "c"))
+        }
+
+        @Test
+        fun `should not run the right parser if the left parser did not match`() {
+            //given
+            val input = "abc"
+
+            //when
+            val result = (char_('c') keepLeft char_('b'))(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class KeepRight {
+        @Test
+        fun `should keep the result of the right parser`() {
+            //given
+            val input = "abc"
+
+            //when
+            val result = (char_('a') keepRight char_('b'))(input)
+
+            //then
+            assertThat(result, isParsedAs('b', "c"))
+        }
+
+        @Test
+        fun `should not run the right parser if the left parser did not match`() {
+            //given
+            val input = "abc"
+
+            //when
+            val result = (char_('c') keepRight char_('b'))(input)
 
             //then
             assertThat(result, isNotParsed())

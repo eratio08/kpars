@@ -127,16 +127,16 @@ infix fun <A, B> Parser<A>.keepLeft(p2: Parser<B>): Parser<A> = this flatMap { a
 infix fun <A, B> Parser<A>.keepRight(p2: Parser<B>): Parser<B> = this flatMap { p2 }
 
 /**
- * Parse parser `p` separated by parser `s`. Needs to match at least once.
+ * parse parser `p` separated by parser `s`. needs to match at least once.
  */
 fun <S, A> sepBy1(s: Parser<S>, p: Parser<A>): Parser<List<A>> =
-    fix { m -> lift2(::cons, p, s keepRight m or return_<List<A>>(emptyList())) }
+    p flatMap { a -> many(s flatMap { p }) flatMap { l -> return_(buildList { add(a); addAll(l) }) } }
 
 /**
  * Like [sepBy1] but matches 0 or more.
  */
 fun <S, A> sepBy(s: Parser<S>, p: Parser<A>): Parser<List<A>> =
-    lift2(::cons, p, s keepRight sepBy1(s, p) or return_(emptyList())) or return_(emptyList())
+    sepBy1(s, p) or return_(emptyList())
 
 /**
  * Alternately applies parser `p` and `op`. The result of `of` is assumed to be a left associative operator.
@@ -173,12 +173,12 @@ fun <A> chainR(p: Parser<A>, op: Parser<(A, A) -> A>, a: A): Parser<A> = chainR1
 /**
  * Parses the input as long `p` is satisfied. Matches 1 or more.
  */
-fun takeWhile1 (p: (Char)-> Boolean): Parser<String> = many1 (satisfies (p)) map {chars -> chars.joinToString()}
+fun takeWhile1(p: (Char) -> Boolean): Parser<String> = many1(satisfies(p)) map { chars -> chars.joinToString() }
 
 /**
  * Parses the input as long `p` is satisfied. Matches 0 or more.
  */
-fun takeWhile (p: (Char)-> Boolean): Parser<String> = many (satisfies (p)) map {chars -> chars.joinToString()}
+fun takeWhile(p: (Char) -> Boolean): Parser<String> = many(satisfies(p)) map { chars -> chars.joinToString() }
 
 fun isWhitespace(c: Char): Boolean = when (c) {
     ' ', '\n', '\r', '\n', '\t' -> true

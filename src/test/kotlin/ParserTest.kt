@@ -11,6 +11,8 @@ import de.elurz.map
 import de.elurz.or
 import de.elurz.return_
 import de.elurz.satisfies
+import de.elurz.sepBy
+import de.elurz.sepBy1
 import de.elurz.string_
 import de.elurz.zero
 import org.hamcrest.MatcherAssert.assertThat
@@ -319,7 +321,7 @@ class ParserTest {
             val result = many(char_('a'))(input)
 
             //then
-            assertThat(result, isParsedAs('a', "bc"))
+            assertThat(result, isParsedAs(listOf('a'), "bc"))
         }
 
         @Test
@@ -358,7 +360,7 @@ class ParserTest {
             val result = many1(char_('a'))(input)
 
             //then
-            assertThat(result, isParsedAs('a', "bc"))
+            assertThat(result, isParsedAs(listOf('a'), "bc"))
         }
 
         @Test
@@ -437,6 +439,108 @@ class ParserTest {
 
             //then
             assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class SepBy1 {
+        @Test
+        fun `should match parser separated by other parser given at least one match`() {
+            //given
+            val input = "ab,ab,ab"
+
+            //when
+            val result = sepBy1(char_(','), string_("ab"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("ab", "ab", "ab"), ""))
+        }
+
+        @Test
+        fun `should should not consume separator if not in middle position`() {
+            //given
+            val input = "ab,"
+
+            //when
+            val result = sepBy1(char_(','), string_("ab"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("ab"), ","))
+        }
+
+        @Test
+        fun `should parse if not separator is matched`() {
+            //given
+            val input = "ab"
+
+            //when
+            val result = sepBy1(char_(','), string_("ab"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("ab"), ""))
+        }
+
+        @Test
+        fun `should fail if not match`() {
+            //given
+            val input = "abc,abc"
+
+            //when
+            val result = sepBy1(char_(','), string_("bc"))(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class SepBy {
+        @Test
+        fun `should match parser separated by other parser given at least one match`() {
+            //given
+            val input = "ab,ab"
+
+            //when
+            val result = sepBy(char_(','), string_("ab"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("ab", "ab"), ""))
+        }
+
+        @Test
+        fun `should not consume separator of not in separating position`() {
+            //given
+            val input = "ab,"
+
+            //when
+            val result = sepBy(char_(','), string_("ab"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("ab"), ","))
+        }
+
+        @Test
+        fun `should match given no separator`() {
+            //given
+            val input = "ab"
+
+            //when
+            val result = sepBy(char_(','), string_("ab"))(input)
+
+            //then
+            assertThat(result, isParsedAs(listOf("ab"), ""))
+        }
+
+        @Test
+        fun `should not fail on not matching`() {
+            //given
+            val input = "abc,abc"
+
+            //when
+            val result = sepBy(char_(','), string_("bc"))(input)
+
+            //then
+            assertThat(result, isParsedAs(emptyList(), "abc,abc"))
         }
     }
 }

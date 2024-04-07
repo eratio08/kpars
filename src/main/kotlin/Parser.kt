@@ -176,6 +176,16 @@ fun isWhitespace(c: Char): Boolean = when (c) {
 }
 
 /**
+ * Parses the input as long `p` is satisfied. Matches 1 or more.
+ */
+fun takeWhile1 (p: (Char)-> Boolean): Parser<String> = many1 (satisfies (p)) map {chars -> chars.joinToString()}
+
+/**
+ * Parses the input as long `p` is satisfied. Matches 0 or more.
+ */
+fun takeWhile (p: (Char)-> Boolean): Parser<String> = many (satisfies (p)) map {chars -> chars.joinToString()}
+
+/**
  * Matches whitespaces.
  */
 fun whitespace(): Parser<String> =

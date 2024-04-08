@@ -1,5 +1,9 @@
 import de.elurz.Parser
 import de.elurz.both
+import de.elurz.chainL
+import de.elurz.chainL1
+import de.elurz.chainR
+import de.elurz.chainR1
 import de.elurz.char_
 import de.elurz.flatMap
 import de.elurz.item
@@ -14,6 +18,9 @@ import de.elurz.satisfies
 import de.elurz.sepBy
 import de.elurz.sepBy1
 import de.elurz.string_
+import de.elurz.takeWhile
+import de.elurz.takeWhile1
+import de.elurz.whitespace
 import de.elurz.zero
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Nested
@@ -541,6 +548,261 @@ class ParserTest {
 
             //then
             assertThat(result, isParsedAs(emptyList(), "abc,abc"))
+        }
+    }
+
+    @Nested
+    inner class ChainL1 {
+        @Test
+        fun `should apply parsed values to interspersed operation parser`() {
+            //given
+            val input = "1 + 2"
+
+            //when
+            val result = chainL1(digit, addOp)(input)
+
+            //then
+            assertThat(result, isParsedAs(3, ""))
+        }
+
+        @Test
+        fun `should apply op left associatively`() {
+            //given
+            val input = "4 - 2 + 2"
+
+            //when
+            val result = chainL1(digit, addOp)(input)
+
+            //then
+            assertThat(result, isParsedAs(4, ""))
+        }
+
+        @Test
+        fun `should fail if not matched`() {
+            //given
+            val input = "a + c"
+
+            //when
+            val result = chainL1(digit, addOp)(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class ChainL {
+        @Test
+        fun `should apply parsed values to interspersed operation parser`() {
+            //given
+            val input = "1 + 2"
+            val default = 9
+
+            //when
+            val result = chainL(digit, addOp, default)(input)
+
+            //then
+            assertThat(result, isParsedAs(3, ""))
+        }
+
+        @Test
+        fun `should apply op left associatively`() {
+            //given
+            val input = "4 - 2 + 2"
+            val default = 9
+
+            //when
+            val result = chainL(digit, addOp, default)(input)
+
+            //then
+            assertThat(result, isParsedAs(4, ""))
+        }
+
+        @Test
+        fun `should return default if not matched`() {
+            //given
+            val input = "a + c"
+            val default = 9
+
+            //when
+            val result = chainL(digit, addOp, default)(input)
+
+            //then
+            assertThat(result, isParsedAs(default, "a + c"))
+        }
+    }
+
+    @Nested
+    inner class ChainR1 {
+        @Test
+        fun `should apply parsed values to interspersed operation parser`() {
+            //given
+            val input = "1 + 2"
+
+            //when
+            val result = chainR1(digit, addOp)(input)
+
+            //then
+            assertThat(result, isParsedAs(3, ""))
+        }
+
+        @Test
+        fun `should apply op right associatively`() {
+            //given
+            val input = "4 - 2 + 2"
+
+            //when
+            val result = chainR1(digit, addOp)(input)
+
+            //then
+            assertThat(result, isParsedAs(0, ""))
+        }
+
+        @Test
+        fun `should fail if not matched`() {
+            //given
+            val input = "a + c"
+
+            //when
+            val result = chainL1(digit, addOp)(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class ChainR {
+        @Test
+        fun `should apply parsed values to interspersed operation parser`() {
+            //given
+            val input = "1 + 2"
+            val default = 9
+
+            //when
+            val result = chainR(digit, addOp, default)(input)
+
+            //then
+            assertThat(result, isParsedAs(3, ""))
+        }
+
+        @Test
+        fun `should apply op right associatively`() {
+            //given
+            val input = "4 - 2 + 2"
+            val default = 9
+
+            //when
+            val result = chainR(digit, addOp, default)(input)
+
+            //then
+            assertThat(result, isParsedAs(0, ""))
+        }
+
+        @Test
+        fun `should return default if not matched`() {
+            //given
+            val input = "a + c"
+            val default = 9
+
+            //when
+            val result = chainR(digit, addOp, default)(input)
+
+            //then
+            assertThat(result, isParsedAs(default, "a + c"))
+        }
+    }
+
+    @Nested
+    inner class TakeWhile1 {
+        @Test
+        fun `should consume while the the predicate is satisfied`() {
+            //given
+            val input = "abababcabab"
+            val predicate: (Char) -> Boolean = {
+                when (it) {
+                    'a', 'b' -> true
+                    else -> false
+                }
+            }
+
+            //when
+            val result = takeWhile1(predicate)(input)
+
+            //then
+            assertThat(result, isParsedAs("ababab", "cabab"))
+        }
+
+        @Test
+        fun `should fail if nothing matches`() {
+            //given
+            val input = "cba"
+            val predicate: (Char) -> Boolean = {
+                when (it) {
+                    'a', 'b' -> true
+                    else -> false
+                }
+            }
+
+            //when
+            val result = takeWhile1(predicate)(input)
+
+            //then
+            assertThat(result, isNotParsed())
+        }
+    }
+
+    @Nested
+    inner class TakeWhile {
+        @Test
+        fun `should consume while the the predicate is satisfied`() {
+            //given
+            val input = "abababcabab"
+            val predicate: (Char) -> Boolean = {
+                when (it) {
+                    'a', 'b' -> true
+                    else -> false
+                }
+            }
+
+            //when
+            val result = takeWhile(predicate)(input)
+
+            //then
+            assertThat(result, isParsedAs("ababab", "cabab"))
+        }
+
+        @Test
+        fun `should not fail if nothing matches`() {
+            //given
+            val input = "cba"
+            val predicate: (Char) -> Boolean = {
+                when (it) {
+                    'a', 'b' -> true
+                    else -> false
+                }
+            }
+
+            //when
+            val result = takeWhile(predicate)(input)
+
+            //then
+            assertThat(result, isParsedAs("", input))
+        }
+    }
+
+    @Nested
+    inner class Whitespace {
+        @Test
+        fun `should match whitespace`() {
+            //given
+            val input = "   abc"
+
+            //when
+            val result = whitespace()(input)
+
+            //then
+            assertThat(result, isParsedAs("   ", "abc"))
         }
     }
 }

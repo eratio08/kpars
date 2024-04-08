@@ -173,12 +173,14 @@ fun <A> chainR(p: Parser<A>, op: Parser<(A, A) -> A>, a: A): Parser<A> = chainR1
 /**
  * Parses the input as long `p` is satisfied. Matches 1 or more.
  */
-fun takeWhile1(p: (Char) -> Boolean): Parser<String> = many1(satisfies(p)) map { chars -> chars.joinToString() }
+fun takeWhile1(p: (Char) -> Boolean): Parser<String> =
+    many1(satisfies(p)) map { chars -> chars.joinToString(separator = "") }
 
 /**
  * Parses the input as long `p` is satisfied. Matches 0 or more.
  */
-fun takeWhile(p: (Char) -> Boolean): Parser<String> = many(satisfies(p)) map { chars -> chars.joinToString() }
+fun takeWhile(p: (Char) -> Boolean): Parser<String> =
+    many(satisfies(p)) map { chars -> chars.joinToString(separator = "") }
 
 fun isWhitespace(c: Char): Boolean = when (c) {
     ' ', '\n', '\r', '\n', '\t' -> true
@@ -189,7 +191,7 @@ fun isWhitespace(c: Char): Boolean = when (c) {
  * Matches whitespaces.
  */
 fun whitespace(): Parser<String> =
-    many(satisfies(::isWhitespace)) flatMap { cs -> return_(cs.joinToString()) }
+    many(satisfies(::isWhitespace)) flatMap { cs -> return_(cs.joinToString(separator = "")) }
 
 /**
  * Applies `p` and consumes trailing whitespace.

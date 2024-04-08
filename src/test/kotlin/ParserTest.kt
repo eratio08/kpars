@@ -1,4 +1,5 @@
 import de.elurz.Parser
+import de.elurz.apply
 import de.elurz.both
 import de.elurz.chainL
 import de.elurz.chainL1
@@ -18,8 +19,10 @@ import de.elurz.satisfies
 import de.elurz.sepBy
 import de.elurz.sepBy1
 import de.elurz.string_
+import de.elurz.symbol
 import de.elurz.takeWhile
 import de.elurz.takeWhile1
+import de.elurz.token
 import de.elurz.whitespace
 import de.elurz.zero
 import org.hamcrest.MatcherAssert.assertThat
@@ -803,6 +806,51 @@ class ParserTest {
 
             //then
             assertThat(result, isParsedAs("   ", "abc"))
+        }
+    }
+
+    @Nested
+    inner class Token {
+        @Test
+        fun `should match the parser and consume all trailing whitespace`() {
+            //given
+            val input = "abc      d"
+
+            //when
+            val result = token(string_("abc"))(input)
+
+            //then
+            assertThat(result, isParsedAs("abc", "d"))
+        }
+    }
+
+    @Nested
+    inner class Symbol {
+        @Test
+        fun `should parser the given string and consume all trailing whitespace`() {
+            //given
+            val input = "abc      d"
+
+            //when
+            val result = symbol("abc")(input)
+
+            //then
+            assertThat(result, isParsedAs("abc", "d"))
+        }
+    }
+
+    @Nested
+    inner class Apply {
+        @Test
+        fun `should consume all leading whitespace and run the given parser`() {
+            //given
+            val input = "      abc      d"
+
+            //when
+            val result = apply(symbol("abc"))(input)
+
+            //then
+            assertThat(result, isParsedAs("abc", "d"))
         }
     }
 }
